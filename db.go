@@ -157,8 +157,16 @@ func (m *DbMap) createIndexImpl(dialect reflect.Type,
 		s.WriteString(" unique")
 	}
 	s.WriteString(" index")
-	s.WriteString(fmt.Sprintf(" %s on %s", index.IndexName, table.TableName))
-	if dname := dialect.Name(); dname == "PostgresDialect" && index.IndexType != "" {
+	dname := dialect.Name()
+	if dname == "PostgresDialect" {
+		s.WriteString(" if not exists")
+	}
+	if table.SchemaName != "" {
+		s.WriteString(fmt.Sprintf(" %s on %s.%s", index.IndexName, table.SchemaName, table.TableName))
+	} else {
+		s.WriteString(fmt.Sprintf(" %s on %s", index.IndexName, table.TableName))
+	}
+	if dname == "PostgresDialect" && index.IndexType != "" {
 		s.WriteString(fmt.Sprintf(" %s %s", m.Dialect.CreateIndexSuffix(), index.IndexType))
 	}
 	s.WriteString(" (")
